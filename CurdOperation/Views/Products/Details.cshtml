@@ -1,0 +1,51 @@
+﻿@model CurdOperation.Models.Product
+
+@{
+    ViewData["Title"] = "Product Details";
+}
+
+<h1>Product Details</h1>
+
+<div class="card shadow-sm p-4 mb-4">
+    <h4 class="card-title">Product Information</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">ID</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Id)</dd>
+
+        <dt class="col-sm-2">Name</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Name)</dd>
+
+        <dt class="col-sm-2">Brand</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Brand)</dd>
+
+        <dt class="col-sm-2">Category</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Category)</dd>
+
+        <dt class="col-sm-2">Price</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Price)</dd>
+
+        <dt class="col-sm-2">Description</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Description)</dd>
+
+        <dt class="col-sm-2">Image</dt>
+        <dd class="col-sm-10">
+            @if (!string.IsNullOrEmpty(Model.ImageFileName))
+            {
+                <img src="~/products/@Model.ImageFileName" alt="Product Image" width="200" class="img-thumbnail" />
+            }
+            else
+            {
+                <span>No image available.</span>
+            }
+        </dd>
+
+        <dt class="col-sm-2">Created On</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Created)</dd>
+    </dl>
+</div>
+
+<div class="mt-3">
+    @Html.ActionLink("Edit", "Edit", new { id = Model.Id }, new { @class = "btn btn-primary" })
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+</div>

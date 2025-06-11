@@ -1,7 +1,7 @@
 ﻿using CurdOperation.Models;
 using CurdOperation.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.EntityFrameworkCore;
 
 namespace CurdOperation.Controllers
 {
@@ -10,16 +10,17 @@ namespace CurdOperation.Controllers
         private readonly ApplicationDbContext context;
         private readonly IWebHostEnvironment environment;
 
-        
         public ProductsController(ApplicationDbContext context, IWebHostEnvironment environment)
         {
             this.context = context;
             this.environment = environment;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var products = context.Products.OrderByDescending(p => p.Id).ToList();
+            var products = await context.Products
+                .OrderByDescending(p => p.Id)
+                .ToListAsync();
             return View(products);
         }
 
@@ -29,7 +30,7 @@ namespace CurdOperation.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create(ProductDto productDto)
+        public async Task<IActionResult> Create(ProductDto productDto)
         {
             if (productDto.ImageFile == null)
             {
@@ -44,9 +45,9 @@ namespace CurdOperation.Controllers
             string newFileName = DateTime.Now.ToString("yyyyMMddHHmmssff") + Path.GetExtension(productDto.ImageFile!.FileName);
             string imageFullPath = Path.Combine(environment.WebRootPath, "products", newFileName);
 
-            using (var stream = System.IO.File.Create(imageFullPath))
+            using (var stream = new FileStream(imageFullPath, FileMode.Create))
             {
-                productDto.ImageFile.CopyTo(stream);
+                await productDto.ImageFile.CopyToAsync(stream);
             }
 
             Product product = new Product
@@ -60,15 +61,16 @@ namespace CurdOperation.Controllers
                 Created = DateTime.Now
             };
 
-            context.Products.Add(product);
-            context.SaveChanges();
+            await context.Products.AddAsync(product);
+            await context.SaveChangesAsync();
 
             return RedirectToAction("Index");
         }
 
-        public IActionResult Edit(int id)
+        public async Task<IActionResult> 
+            Edit(int id)
         {
-            var product = context.Products.Find(id);
+            var product = await context.Products.FindAsync(id);
             if (product == null)
             {
                 return NotFound();
@@ -88,9 +90,9 @@ namespace CurdOperation.Controllers
         }
 
         [HttpPost]
-        public IActionResult Edit(int id, ProductDto productDto)
+        public async Task<IActionResult> Edit(int id, ProductDto productDto)
         {
-            var product = context.Products.Find(id);
+            var product = await context.Products.FindAsync(id);
             if (product == null)
             {
                 return NotFound();
@@ -115,21 +117,41 @@ namespace CurdOperation.Controllers
 
                 using (var stream = new FileStream(imagePath, FileMode.Create))
                 {
-                    productDto.ImageFile.CopyTo(stream);
+                    await productDto.ImageFile.CopyToAsync(stream);
                 }
 
                 product.ImageFileName = newFileName;
             }
 
-            context.SaveChanges();
+            await context.SaveChangesAsync();
             return RedirectToAction("Index");
         }
 
         
-        [HttpPost]
-        public IActionResult Delete(int id)
+
+        [HttpGet]
+        public async Task<IActionResult> Details(int id)
         {
-            var product = context.Products.Find(id);
+            if (id > 0)
+            {
+                var product = await context.Products.FindAsync(id);
+
+                if (product != null)
+                {
+                    return View(product);
+                }
+
+                return NotFound();
+            }
+
+            return BadRequest(); 
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var product = await context.Products.FindAsync(id);
             if (product == null)
             {
                 return NotFound();
@@ -142,17 +164,9 @@ namespace CurdOperation.Controllers
             }
 
             context.Products.Remove(product);
-            context.SaveChanges();
+            await context.SaveChangesAsync();
 
             return RedirectToAction("Index");
         }
     }
 }
-
-
-//[HttpGet]  -->   async method syntax in the .net
-//public async Teak <IActionResult> Create()
-//{
-//    ViewBag.Departments = await DbFunction.Departments.ToListAsync();
-//    return View();  
-//}
